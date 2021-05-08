@@ -5,6 +5,7 @@ import com.icloud.jpashopreview.domain.Member;
 import com.icloud.jpashopreview.domain.Order;
 import com.icloud.jpashopreview.domain.OrderSearch;
 import com.icloud.jpashopreview.domain.item.Item;
+import com.icloud.jpashopreview.repository.OrderCustomRepository;
 import com.icloud.jpashopreview.service.ItemService;
 import com.icloud.jpashopreview.service.MemberService;
 import com.icloud.jpashopreview.service.OrderService;
@@ -25,9 +26,14 @@ public class OrderController {
     private final ItemService itemService;
     private final OrderService orderService;
 
+
+    private final OrderCustomRepository customRepository;
+
+
     @GetMapping("/orders")
     public String orderList(@ModelAttribute(name = "orderSearch") OrderSearch orderSearch, Model model) {
-        List<Order> orders = orderService.findOrders(orderSearch);
+        List<Order> orders = customRepository.findOrders(orderSearch);
+//        List<Order> orders = orderService.findOrders(orderSearch);
         model.addAttribute("orders", orders);
         return "order/orderList";
     }
