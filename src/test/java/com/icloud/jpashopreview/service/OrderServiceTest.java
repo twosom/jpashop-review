@@ -7,8 +7,8 @@ import com.icloud.jpashopreview.domain.OrderStatus;
 import com.icloud.jpashopreview.domain.item.Item;
 import com.icloud.jpashopreview.domain.item.Movie;
 import com.icloud.jpashopreview.exception.NotEnoughStockException;
-import com.icloud.jpashopreview.repository.OrderRepository;
 
+import com.icloud.jpashopreview.repository.OrderRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
+import javax.persistence.Subgraph;
+import java.util.HashMap;
+import java.util.Map;
 
 @Transactional
 @SpringBootTest
@@ -84,6 +88,85 @@ class OrderServiceTest {
     }
 
 
+    @Test
+    void entityGraphTest() {
+        Member member = createMember();
+        Movie tenet = createMovie("TENET", 10, 10000);
+        int count = 5;
+        Long orderId = orderService.order(member.getId(), tenet.getId(), count);
+
+        em.flush();
+        em.clear();
+
+
+        EntityGraph<?> graph = em.getEntityGraph("Order.withMember");
+
+        Map hints = new HashMap();
+        hints.put("javax.persistence.fetchgraph", graph);
+
+        Order order = em.find(Order.class, orderId, hints);
+    }
+
+
+    @Test
+    void subGraphTest() {
+        Member member = createMember();
+        Movie tenet = createMovie("TENET", 10, 10000);
+        int count = 5;
+        Long orderId = orderService.order(member.getId(), tenet.getId(), count);
+
+        em.flush();
+        em.clear();
+
+        em.createQuery(
+                "select o " +
+                        "from Order o " +
+                        "where o.id = :orderId", Order.class)
+                .setParameter("orderId", orderId)
+                .setHint("javax.persistence.fetchgraph", em.getEntityGraph("Order.withAll"))
+                .getResultList();
+    }
+
+    @Test
+    void dynamicEntityGraph() {
+        Member member = createMember();
+        Movie tenet = createMovie("TENET", 10, 10000);
+        int count = 5;
+        Long orderId = orderService.order(member.getId(), tenet.getId(), count);
+
+        em.flush();
+        em.clear();
+
+        EntityGraph<Order> graph = em.createEntityGraph(Order.class);
+        graph.addAttributeNodes("member");
+
+        Map hints = new HashMap();
+        hints.put("javax.persistence.fetchgraph", graph);
+        Order order = em.find(Order.class, orderId, hints);
+    }
+
+    @Test
+    void dynamicSubGraph() {
+        Member member = createMember();
+        Movie tenet = createMovie("TENET", 10, 10000);
+        int count = 5;
+        Long orderId = orderService.order(member.getId(), tenet.getId(), count);
+
+        em.flush();
+        em.clear();
+
+        EntityGraph<Order> graph = em.createEntityGraph(Order.class);
+        graph.addAttributeNodes("member");
+        Subgraph<Object> orderItems = graph.addSubgraph("orderItems");
+        orderItems.addAttributeNodes("item");
+
+        Map hints = new HashMap();
+        hints.put("javax.persistence.fetchgraph", graph);
+
+        Order order = em.find(Order.class, orderId, hints);
+    }
+
+
 
 
     private Movie createMovie(String name, int stockQuantity, int price) {
@@ -103,6 +186,8 @@ class OrderServiceTest {
         em.persist(member);
         return member;
     }
+
+
 
 
 }

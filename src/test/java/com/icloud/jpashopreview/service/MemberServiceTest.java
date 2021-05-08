@@ -21,6 +21,7 @@ class MemberServiceTest {
 
     @Test
     void 회원가입() throws Exception {
+
         //given
         Member member = new Member();
         member.setName("somang");
@@ -29,7 +30,7 @@ class MemberServiceTest {
         Long savedId = memberService.join(member);
 
         //then
-        Assertions.assertThat(member).isEqualTo(memberRepository.findOne(savedId));
+        Assertions.assertThat(member).isEqualTo(memberRepository.findById(savedId).get());
     }
 
     @Test

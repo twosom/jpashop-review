@@ -4,8 +4,11 @@ package com.icloud.jpashopreview.service;
 import com.icloud.jpashopreview.domain.Member;
 import com.icloud.jpashopreview.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
 
@@ -27,8 +30,8 @@ public class MemberService {
     }
 
     private void validateDuplicateMember(Member member) {
-        List<Member> findMembers = memberRepository.findByName(member.getName());
-        if (!findMembers.isEmpty()) {
+        List<Member> findMember = memberRepository.findByName(member.getName());
+        if (!findMember.isEmpty()) {
             throw new IllegalStateException("이미 존재하는 회원입니다.");
         }
     }
@@ -41,6 +44,10 @@ public class MemberService {
     }
 
     public Member findOne(Long memberId) {
-        return memberRepository.findOne(memberId);
+        return memberRepository.findById(memberId).get();
+    }
+
+    public Page<Member> findMembers(Pageable pageable) {
+        return memberRepository.findAll(pageable);
     }
 }

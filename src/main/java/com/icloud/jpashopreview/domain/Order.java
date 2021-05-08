@@ -9,9 +9,25 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * Named 엔티티 그래프는 {@link NamedEntityGraph} 로 정의한다.<br/>
+ * name : 엔티티 그래프의 이름을 정의한다.<br/>
+ * attributeNodes : 함께 조회할 속성을 선택한다. 이 때 {@link NamedAttributeNode} 를 사용하고<br/>
+ * 그 값으로 함께 조회할 속성을 선택하면 된다.
+ */
+@NamedEntityGraph(
+        name = "Order.withMember",
+        attributeNodes = {@NamedAttributeNode("member")}
+)
+@NamedEntityGraph(
+        name = "Order.withAll",
+        attributeNodes = {@NamedAttributeNode("member"),
+                @NamedAttributeNode(value = "orderItems", subgraph = "orderItems")},
+        subgraphs = @NamedSubgraph(name = "orderItems", attributeNodes = {@NamedAttributeNode("item")})
+)
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 @Table(name = "orders")
 public class Order {
 
@@ -20,14 +36,14 @@ public class Order {
     @Column(name = "order_id")
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
     private Member member;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "delivery_id")
     private Delivery delivery;
 
